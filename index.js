@@ -28,7 +28,7 @@ db.prepare("SELECT value FROM messages")
   });
 
 // JSON support.
-app.use(express.json());
+app.use(express.json({ limit: "16MB" }));
 
 // Return all messages.
 app.get("/", (req, res) => {
@@ -53,20 +53,36 @@ app.get("/author/:id", (req, res) => {
 
 // Accept new messages.
 app.post("/", function (req, res) {
-  console.log(req.body);
-  try {
-    state = ssbValidate.append(state, hmacKey, req.body);
-    const value = JSON.stringify(req.body);
-    db.prepare(
-      "INSERT INTO messages (value, author, sequence) VALUES (?, ?, ?)"
-    ).run(value, req.body.author, req.body.sequence);
+  // Handles each message being written. Success returns true, otherwise false.
+  const write = (input) => {
+    if (input.value == null) {
+      return false;
+    }
 
-    res.send("OK\n");
-  } catch (err) {
-    console.log(err);
-    res.status(400);
-    res.send("NO\n");
+    const value = input.value;
+
+    try {
+      state = ssbValidate.append(state, hmacKey, value);
+      const stringValue = JSON.stringify(value);
+      db.prepare(
+        "INSERT INTO messages (value, author, sequence) VALUES (?, ?, ?)"
+      ).run(stringValue, value.author, value.sequence);
+      return true;
+    } catch (err) {
+      // console.log(err);
+      return false;
+    }
+  };
+
+  // Return number of successful writes.
+  let rowsWritten;
+  if (Array.isArray(req.body)) {
+    rowsWritten = req.body.filter(write).length;
+  } else {
+    rowsWritten = Number(req.body);
   }
+
+  res.send(`${rowsWritten}\n`);
 });
 
 app.listen(port, () =>

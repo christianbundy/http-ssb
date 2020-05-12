@@ -4,18 +4,11 @@ Hi! An HTTP service that lets you GET and POST messages from Secure Scuttlebutt.
 
 ```sh
 me="$(ssb whoami | jq .id)"
-
-IFS='
-'
-
-ssb createHistoryStream --id "$me" \
-| jq -c '.value' \
-| while read -r line
-  do
-    curl --header "Content-Type: application/json" --data "$line" localhost:3000
-  done
-
-unset IFS
+host="localhost:3000"
+ssb createHistoryStream --id "$me" --limit 1024 \
+| jq -s \
+| jq -c \
+| curl --header 'Content-Type: application/json' --data '@-' "$host"
 ```
 
 This takes like 2.5 minutes to add all of my messages to the database. It could
