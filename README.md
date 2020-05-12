@@ -21,9 +21,6 @@ unset IFS
 This takes like 2.5 minutes to add all of my messages to the database. It could
 probably be faster with some way to add messages in a batch.
 
-Database is not persistent, but it could be. You just have to pass all of the
-existing messages through SSB-Validate again so that it has the correct state.
-
 ## API
 
 **Terrible awful prototype, expect breaking changes.**

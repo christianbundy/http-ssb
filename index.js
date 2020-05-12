@@ -3,16 +3,26 @@ const Database = require("better-sqlite3");
 const ssbValidate = require("ssb-validate");
 
 const app = express();
-const db = new Database(":memory:", { verbose: console.log });
+const db = new Database("db.sqlite");
 
+const host = "localhost";
 const port = 3000;
+
+const externalHost = `http://${host}:${port}`;
+
 const hmacKey = null;
 
 let state = ssbValidate.initial();
 
 db.prepare(
-  "CREATE TABLE messages (value TEXT, author TEXT, sequence INTEGER)"
+  "CREATE TABLE IF NOT EXISTS messages (value TEXT, author TEXT, sequence INTEGER)"
 ).run();
+
+db.prepare("SELECT value FROM messages")
+  .all()
+  .forEach((row) => {
+    ssbValidate.append(state, hmacKey, JSON.parse(row.value));
+  });
 
 // JSON support.
 app.use(express.json());
@@ -25,9 +35,7 @@ app.get("/", (req, res) => {
     )
     .all();
   const rowsWithLink = rows.map((row) => {
-    row.link = `http://localhost:${port}/author/${encodeURIComponent(
-      row.author
-    )}`;
+    row.link = `${externalHost}/author/${encodeURIComponent(row.author)}`;
     return row;
   });
   res.send(rowsWithLink);
