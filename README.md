@@ -18,6 +18,9 @@ ssb createHistoryStream --id "$me" \
 unset IFS
 ```
 
+This takes like 2.5 minutes to add all of my messages to the database. It could
+probably be faster with some way to add messages in a batch.
+
 Database is not persistent, but it could be. You just have to pass all of the
 existing messages through SSB-Validate again so that it has the correct state.
 
@@ -27,7 +30,13 @@ existing messages through SSB-Validate again so that it has the correct state.
 
 ### HTTP GET /
 
-Retreive list of all messages.
+Retreive latest sequence number from each author.
+
+### HTTP GET /author/:id
+
+Get all messages from each author.
+
+(This is surprisingly fast. Like, 0.307 seconds to get all 17,500 of my messages.)
 
 ### HTTP POST /
 
