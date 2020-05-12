@@ -18,6 +18,9 @@ db.prepare(
   "CREATE TABLE IF NOT EXISTS messages (value TEXT, author TEXT, sequence INTEGER)"
 ).run();
 
+// TODO: Check for race condition.
+// While this is running I think we might validate a duplicate message.
+// I don't think it's a security problem, but it's not a best practice either.
 db.prepare("SELECT value FROM messages")
   .all()
   .forEach((row) => {
