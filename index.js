@@ -55,11 +55,7 @@ app.get("/author/:id", (req, res) => {
 app.post("/", function (req, res) {
   // Handles each message being written. Success returns true, otherwise false.
   const write = (input) => {
-    if (input.value == null) {
-      return false;
-    }
-
-    const value = input.value;
+    const value = input.value != null ? input.value : input;
 
     try {
       state = ssbValidate.append(state, hmacKey, value);
@@ -79,7 +75,7 @@ app.post("/", function (req, res) {
   if (Array.isArray(req.body)) {
     rowsWritten = req.body.filter(write).length;
   } else {
-    rowsWritten = Number(req.body);
+    rowsWritten = Number(write(req.body));
   }
 
   res.send(`${rowsWritten}\n`);
